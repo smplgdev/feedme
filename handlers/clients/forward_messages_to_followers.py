@@ -4,6 +4,7 @@ from typing import List
 from aiogram import types
 from aiogram.types import InputMediaPhoto, MediaGroup, InputMediaDocument, InputMediaVideo, \
     InputMediaAudio
+from aiogram.utils.exceptions import BotBlocked
 from aiogram_media_group import MediaGroupFilter, media_group_handler
 
 from data.config import BOT_USERNAME
@@ -50,7 +51,11 @@ async def answer_media_group(messages: List[types.Message]):
             media.attach(InputMediaAudio(messages[i].audio.file_id, caption=caption if i == 0 else None))
 
     for user in users:
-        await bot.send_media_group(user.follower_telegram_id, media)
+        try:
+            await bot.send_media_group(user.follower_telegram_id, media)
+        except BotBlocked:
+            pass
+        await asyncio.sleep(0.35)
 
 
 @dp.message_handler(ClientFilter(), is_forwarded=True, content_types=types.ContentType.TEXT)
@@ -61,7 +66,10 @@ async def send_text_handler(message: types.Message):
         # FEEDTG
         users = await TelegramUser.get_all_users()
         for user in users:
-            await bot.send_message(user.telegram_id, text, disable_web_page_preview=True)
+            try:
+                await bot.send_message(user.telegram_id, text, disable_web_page_preview=True)
+            except BotBlocked:
+                pass
             await asyncio.sleep(0.35)
         return
     users =  await Channel(channel_id).get_followed_users()
@@ -80,8 +88,12 @@ async def send_text_handler(message: types.Message):
     #     return
 
     for user in users:
-        await bot.send_message(user.follower_telegram_id, text,
-                               disable_web_page_preview=disable_web_preview)
+        try:
+            await bot.send_message(user.follower_telegram_id, text,
+                                   disable_web_page_preview=disable_web_preview)
+        except BotBlocked:
+            # TODO: rm from db
+            pass
         await asyncio.sleep(0.35)
 
 
@@ -100,7 +112,10 @@ async def forward_photo_handler(message: types.Message):
     caption = get_caption_text(message)
 
     for user in users:
-        await bot.send_photo(user.follower_telegram_id, message.photo[-1].file_id, caption)
+        try:
+            await bot.send_photo(user.follower_telegram_id, message.photo[-1].file_id, caption)
+        except BotBlocked:
+            pass
         await asyncio.sleep(0.35)
 
 
@@ -111,7 +126,10 @@ async def forward_photo_handler(message: types.Message):
     caption = get_caption_text(message)
 
     for user in users:
-        await bot.send_video(user.follower_telegram_id, message.video.file_id, caption=caption)
+        try:
+            await bot.send_video(user.follower_telegram_id, message.video.file_id, caption=caption)
+        except BotBlocked:
+            pass
         await asyncio.sleep(0.35)
 
 
@@ -122,7 +140,10 @@ async def forward_photo_handler(message: types.Message):
     caption = get_caption_text(message)
 
     for user in users:
-        await bot.send_document(user.follower_telegram_id, message.document.file_id, caption=caption)
+        try:
+            await bot.send_document(user.follower_telegram_id, message.document.file_id, caption=caption)
+        except BotBlocked:
+            pass
         await asyncio.sleep(0.35)
 
 
@@ -133,7 +154,10 @@ async def forward_photo_handler(message: types.Message):
     caption = get_caption_text(message)
 
     for user in users:
-        await bot.send_audio(user.follower_telegram_id, message.audio.file_id, caption=caption)
+        try:
+            await bot.send_audio(user.follower_telegram_id, message.audio.file_id, caption=caption)
+        except BotBlocked:
+            pass
         await asyncio.sleep(0.35)
 
 
@@ -144,7 +168,10 @@ async def forward_photo_handler(message: types.Message):
     caption = get_caption_text(message)
 
     for user in users:
-        await bot.send_voice(user.follower_telegram_id, message.voice.file_id, caption=caption)
+        try:
+            await bot.send_voice(user.follower_telegram_id, message.voice.file_id, caption=caption)
+        except BotBlocked:
+            pass
         await asyncio.sleep(0.35)
 
 

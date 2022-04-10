@@ -88,7 +88,7 @@ async def run_client(client):
             try:
                 await event.forward_to(BOT_ID)
             except MessageIdInvalidError as e:
-                await client.send_message(ADMINS[1], "(album) ERROR: " + e.message)
+                await client.send_message(ADMINS[0], "(album) ERROR: " + e.message)
 
         @client.on(events.NewMessage(forwards=True))
         async def send_forwarded_message(event):
@@ -163,6 +163,11 @@ async def run_client(client):
             try:
                 # TODO: ValueError: Could not find the input entity for PeerUser(user_id=5292056351) (PeerUser)
                 # ОБРАБОТАТЬ!!!!
+                # msg = await client.send_message(
+                #     BOT_ID,
+                #     message=event.message,
+                #     formatting_entities=event.entities
+                # )
                 await event.forward_to(BOT_ID)
             except MessageIdInvalidError as e:
                 await client.send_message(ADMINS[1], "ERROR: " + e.message)
