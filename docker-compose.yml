@@ -1,0 +1,34 @@
+version: "3.1"
+
+services:
+  feedmerobot:
+    container_name: feedme
+    build:
+      context: .
+    command: python app.py
+    restart: always
+    networks:
+      - batya_botnet
+    env_file:
+      - ".env"
+    volumes:
+      - .:/src
+
+  clients:
+    container_name: clients
+    build:
+      context: .
+    command: python client/authorization.py
+    restart: always
+    networks:
+      - batya_botnet
+    env_file:
+      - ".env"
+    volumes:
+      - .:/src
+
+
+
+networks:
+  batya_botnet:
+    external: true
