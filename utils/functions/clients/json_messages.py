@@ -17,7 +17,8 @@ async def deserialize_bot_json(client, json_msg) -> (Channels, int, bool, int):
 
     client_id = json_dict['client']['id']
 
-    channel_entity = await Channel.get_channel_entity(client, channel_id or channel_username or channel_invite_link)
+    channel_entity = await Channel.get_channel_entity(client, channel_username or channel_invite_link)
+
     channel = await Client(client_id).start_tracking_channel_or_pass(client, channel_entity, channel_invite_link)
 
     is_following = await Follower(follower_id).get_follower(channel.telegram_id)
