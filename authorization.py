@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 
 from telethon import TelegramClient, events
 from telethon.errors import ChannelPrivateError, MessageIdInvalidError
@@ -43,7 +44,7 @@ async def run_client(client):
                         fwd_info = await client(functions.channels.GetFullChannelRequest(message.fwd_from.from_id))
                         chat_id = message.fwd_from.from_id.channel_id
                     except ChannelPrivateError as e:
-                        print(e)
+                        logging.info(e)
                         pass
                 # elif isinstance(is_forwarded.from_id, PeerUser):
                 #     fwd_info = await client(functions.users.GetFullUserRequest(message.fwd_from.from_id))
@@ -88,7 +89,7 @@ async def run_client(client):
             try:
                 await event.forward_to(BOT_ID)
             except MessageIdInvalidError as e:
-                await client.send_message(ADMINS[0], "(album) ERROR: " + e.message)
+                logging.info(e)
 
         @client.on(events.NewMessage(forwards=True))
         async def send_forwarded_message(event):
@@ -170,7 +171,7 @@ async def run_client(client):
                 # )
                 await event.forward_to(BOT_ID)
             except MessageIdInvalidError as e:
-                await client.send_message(ADMINS[1], "ERROR: " + e.message)
+                logging.info(e)
 
         # @client.on(events.NewMessage(forwards=True))
         # async def send_forwarded_message(event):
