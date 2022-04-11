@@ -55,6 +55,9 @@ async def answer_media_group(messages: List[types.Message]):
         try:
             await bot.send_media_group(user.follower_telegram_id, media)
         except BotBlocked:
+            follower = Follower(user.follower_telegram_id)
+            await follower.delete_follower(channel_id)
+            await follower.make_inactive()
             pass
         await asyncio.sleep(0.35)
 
@@ -96,7 +99,9 @@ async def send_text_handler(message: types.Message):
             await bot.send_message(user.follower_telegram_id, text,
                                    disable_web_page_preview=disable_web_preview)
         except BotBlocked:
-            # TODO: rm from db
+            follower = Follower(user.follower_telegram_id)
+            await follower.delete_follower(channel_id)
+            await follower.make_inactive()
             pass
         await asyncio.sleep(0.35)
 

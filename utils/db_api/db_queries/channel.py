@@ -40,9 +40,8 @@ class Channel:
     async def select_client(self, channel_username: str = None, channel_invite_link: str = None):
         is_following = await Client.query.where(and_(or_(self.telegram_id == Channels.telegram_id,
                                                     Channels.username == (channel_username or 'None'),
-                                                    Channels.invite_link == (channel_invite_link or 'None'))),
-                                                User.is_active == True,
-                                                ).gino.first()
+                                                    Channels.invite_link == (channel_invite_link or 'None')),
+                                                    User.is_active == True,)).gino.first()
         if is_following:
             return is_following
 

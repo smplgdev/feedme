@@ -47,7 +47,7 @@ class TelegramUser:
         return user.is_vip
 
     async def get(self):
-        return await User.get(self.telegram_id)
+        return await User.query.where(User.telegram_id == self.telegram_id).gino.first()
 
     async def update_user_data(self, username):
         user = await self.get()
