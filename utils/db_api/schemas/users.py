@@ -14,4 +14,6 @@ class User(TimedBaseModel):
     deep_link = Column(String(20), default=None)
     is_vip = Column(Boolean, default=False)
 
+    is_active = Column(Boolean, default=True)
+
     query: sql.Select

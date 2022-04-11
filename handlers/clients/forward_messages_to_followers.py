@@ -11,6 +11,7 @@ from data.config import BOT_USERNAME
 from filters.client_filter import ClientFilter
 from loader import dp, bot
 from utils.db_api.db_queries.channel import Channel
+from utils.db_api.db_queries.follower import Follower
 from utils.db_api.db_queries.telegram_user import TelegramUser
 
 
@@ -69,6 +70,9 @@ async def send_text_handler(message: types.Message):
             try:
                 await bot.send_message(user.telegram_id, text, disable_web_page_preview=True)
             except BotBlocked:
+                follower = Follower(user.follower_telegram_id)
+                await follower.delete_follower(channel_id)
+                await follower.make_inactive()
                 pass
             await asyncio.sleep(0.35)
         return
@@ -102,7 +106,14 @@ async def send_poll(message: types.Message):
     channel_id = message.forward_from_chat.id
     users =  await Channel(channel_id).get_followed_users()
     for user in users:
-        await message.forward(user.follower_telegram_id)
+        try:
+            await message.forward(user.follower_telegram_id)
+        except BotBlocked:
+            follower = Follower(user.follower_telegram_id)
+            await follower.delete_follower(channel_id)
+            await follower.make_inactive()
+            pass
+        await asyncio.sleep(0.35)
 
 
 @dp.message_handler(ClientFilter(), is_forwarded=True, content_types=[types.ContentType.PHOTO])
@@ -115,6 +126,9 @@ async def forward_photo_handler(message: types.Message):
         try:
             await bot.send_photo(user.follower_telegram_id, message.photo[-1].file_id, caption)
         except BotBlocked:
+            follower = Follower(user.follower_telegram_id)
+            await follower.delete_follower(channel_id)
+            await follower.make_inactive()
             pass
         await asyncio.sleep(0.35)
 
@@ -129,6 +143,9 @@ async def forward_photo_handler(message: types.Message):
         try:
             await bot.send_video(user.follower_telegram_id, message.video.file_id, caption=caption)
         except BotBlocked:
+            follower = Follower(user.follower_telegram_id)
+            await follower.delete_follower(channel_id)
+            await follower.make_inactive()
             pass
         await asyncio.sleep(0.35)
 
@@ -138,11 +155,13 @@ async def forward_photo_handler(message: types.Message):
     channel_id = message.forward_from_chat.id
     users = await Channel(channel_id).get_followed_users()
     caption = get_caption_text(message)
-
     for user in users:
         try:
             await bot.send_document(user.follower_telegram_id, message.document.file_id, caption=caption)
         except BotBlocked:
+            follower = Follower(user.follower_telegram_id)
+            await follower.delete_follower(channel_id)
+            await follower.make_inactive()
             pass
         await asyncio.sleep(0.35)
 
@@ -157,6 +176,9 @@ async def forward_photo_handler(message: types.Message):
         try:
             await bot.send_audio(user.follower_telegram_id, message.audio.file_id, caption=caption)
         except BotBlocked:
+            follower = Follower(user.follower_telegram_id)
+            await follower.delete_follower(channel_id)
+            await follower.make_inactive()
             pass
         await asyncio.sleep(0.35)
 
@@ -171,6 +193,9 @@ async def forward_photo_handler(message: types.Message):
         try:
             await bot.send_voice(user.follower_telegram_id, message.voice.file_id, caption=caption)
         except BotBlocked:
+            follower = Follower(user.follower_telegram_id)
+            await follower.delete_follower(channel_id)
+            await follower.make_inactive()
             pass
         await asyncio.sleep(0.35)
 
@@ -182,7 +207,13 @@ async def forward_photo_handler(message: types.Message):
     caption = get_caption_text(message)
 
     for user in users:
-        await bot.send_animation(user.follower_telegram_id, message.animation.file_id, caption=caption)
+        try:
+            await bot.send_animation(user.follower_telegram_id, message.animation.file_id, caption=caption)
+        except BotBlocked:
+            follower = Follower(user.follower_telegram_id)
+            await follower.delete_follower(channel_id)
+            await follower.make_inactive()
+            pass
         await asyncio.sleep(0.35)
 
 
@@ -192,5 +223,11 @@ async def forward_photo_handler(message: types.Message):
     users = await Channel(channel_id).get_followed_users()
 
     for user in users:
-        await bot.send_sticker(user.follower_telegram_id, message.sticker.file_id)
+        try:
+            await bot.send_sticker(user.follower_telegram_id, message.sticker.file_id)
+        except BotBlocked:
+            follower = Follower(user.follower_telegram_id)
+            await follower.delete_follower(channel_id)
+            await follower.make_inactive()
+            pass
         await asyncio.sleep(0.35)

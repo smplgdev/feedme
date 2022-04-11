@@ -8,7 +8,7 @@ from utils.db_api.schemas.followers import Followers
 
 
 class Follower(TelegramUser):
-    async def get(self, channel_id: int):
+    async def get_follower(self, channel_id: int):
         return await Followers.query.where(and_(self.telegram_id == Followers.follower_telegram_id,
                                                 channel_id == Followers.channel_id)).gino.first()
 

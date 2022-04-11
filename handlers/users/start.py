@@ -7,7 +7,6 @@ from aiogram.utils.callback_data import CallbackData
 
 from keyboards.inline.menu_keyboards import create_feed_markup, create_feed_callback
 from loader import dp
-from utils.db_api import quick_commands as qc
 from utils.db_api.db_queries.telegram_user import TelegramUser
 from utils.strings import messages_text as msg
 
@@ -56,8 +55,12 @@ async def bot_start(message: types.Message):
     telegram_id = message.from_user.id
     deep_link = message.get_args()
     username = message.from_user.username
-    await TelegramUser(telegram_id).add(username=username,
-                                        deep_link=deep_link)
+    user = TelegramUser(telegram_id)
+    user_created = await user.add(username=username, deep_link=deep_link)
+    if not user_created:
+        # If launched bot before
+        await message.answer("С возвращением!", reply_markup=get_menu_markup())
+        return
     markup = create_feed_markup()
     await message.answer(msg.hello_user(message.from_user.first_name), reply_markup=markup)
     # await message.answer("Глеба самый жёсткий")

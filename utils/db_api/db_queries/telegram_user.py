@@ -24,9 +24,11 @@ class TelegramUser:
                 deep_link=deep_link
             )
             await user.create()
-            return user
+            return True
         except UniqueViolationError:
-            pass
+            user = await self.get()
+            await user.update(username=username, is_active=True).apply()
+            return False
 
     async def delete(self):
         """
@@ -36,6 +38,20 @@ class TelegramUser:
         await user.delete()
         return user
 
+    async def make_inactive(self):
+        user = await self.get()
+        await user.update(is_active=False).apply()
+
     async def is_vip(self):
-        user = await User.query.where(User.telegram_id == self.telegram_id).gino.first()
+        user = await self.get()
         return user.is_vip
+
+    async def get(self):
+        return await User.get(self.telegram_id)
+
+    async def update_user_data(self, username):
+        user = await self.get()
+        await user.update(
+            username=username,
+            is_active=True
+        ).apply()

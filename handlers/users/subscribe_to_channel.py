@@ -7,9 +7,7 @@ from aiogram_media_group import MediaGroupFilter, media_group_handler
 
 from filters.client_filter import ClientFilter
 from loader import dp, bot
-from utils.db_api import quick_commands as qc
 from utils.db_api.db_queries.channel import Channel
-from utils.db_api.schemas.channels import Channels
 
 
 @dp.message_handler(MediaGroupFilter(), ClientFilter(False), content_types=[types.ContentType.PHOTO,

@@ -1,9 +1,10 @@
 from asyncpg import UniqueViolationError
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 
 from utils.db_api.schemas.channels import Channels
 from utils.db_api.schemas.clients import Client
 from utils.db_api.schemas.followers import Followers
+from utils.db_api.schemas.users import User
 
 
 class Channel:
@@ -37,9 +38,11 @@ class Channel:
             return False
 
     async def select_client(self, channel_username: str = None, channel_invite_link: str = None):
-        is_following = await Client.query.where(or_(self.telegram_id == Channels.telegram_id,
+        is_following = await Client.query.where(and_(or_(self.telegram_id == Channels.telegram_id,
                                                     Channels.username == (channel_username or 'None'),
-                                                    Channels.invite_link == (channel_invite_link or 'None'))).gino.first()
+                                                    Channels.invite_link == (channel_invite_link or 'None'))),
+                                                User.is_active == True,
+                                                ).gino.first()
         if is_following:
             return is_following
 

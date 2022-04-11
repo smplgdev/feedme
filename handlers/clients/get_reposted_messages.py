@@ -3,6 +3,7 @@ import json
 from typing import List
 
 from aiogram import types
+from aiogram.utils.exceptions import BotBlocked
 from aiogram_media_group import MediaGroupFilter, media_group_handler
 
 from data.config import BOT_USERNAME
@@ -10,6 +11,7 @@ from filters.client_filter import ClientFilter
 from loader import dp, bot
 from utils.db_api import quick_commands as qc
 from utils.db_api.db_queries.channel import Channel
+from utils.db_api.db_queries.follower import Follower
 from utils.db_api.schemas.forwarded_messages import ForwardMessage
 
 
@@ -54,28 +56,58 @@ async def forward_forwarded_message(message: types.Message):
     if message_type == 'text':
         caption = get_forwarded_message_caption_text(message, forwarded_data, message_id_follower_chat, is_message_type_text=True)
         for user in users:
-            await bot.send_message(user.follower_telegram_id, caption,
-                                   disable_web_page_preview=disable_web_preview)
+            try:
+                await bot.send_message(user.follower_telegram_id, caption,
+                                       disable_web_page_preview=disable_web_preview)
+            except BotBlocked:
+                follower = Follower(user.follower_telegram_id)
+                await follower.delete_follower(channel_id)
+                await follower.make_inactive()
+                pass
             await asyncio.sleep(0.35)
     elif message_type == 'photo':
         caption = get_forwarded_message_caption_text(message, forwarded_data, message_id_follower_chat)
         for user in users:
-            await bot.send_photo(user.follower_telegram_id, message.photo[-1].file_id, caption=caption)
+            try:
+                await bot.send_photo(user.follower_telegram_id, message.photo[-1].file_id, caption=caption)
+            except BotBlocked:
+                follower = Follower(user.follower_telegram_id)
+                await follower.delete_follower(channel_id)
+                await follower.make_inactive()
+                pass
             await asyncio.sleep(0.35)
     elif message_type == 'video':
         caption = get_forwarded_message_caption_text(message, forwarded_data, message_id_follower_chat)
         for user in users:
-            await bot.send_video(user.follower_telegram_id, message.video.file_id, caption=caption)
+            try:
+                await bot.send_video(user.follower_telegram_id, message.video.file_id, caption=caption)
+            except BotBlocked:
+                follower = Follower(user.follower_telegram_id)
+                await follower.delete_follower(channel_id)
+                await follower.make_inactive()
+                pass
             await asyncio.sleep(0.35)
     elif message_type == 'document':
         caption = get_forwarded_message_caption_text(message, forwarded_data, message_id_follower_chat)
         for user in users:
-            await bot.send_document(user.follower_telegram_id, message.document.file_id, caption=caption)
+            try:
+                await bot.send_document(user.follower_telegram_id, message.document.file_id, caption=caption)
+            except BotBlocked:
+                follower = Follower(user.follower_telegram_id)
+                await follower.delete_follower(channel_id)
+                await follower.make_inactive()
+                pass
             await asyncio.sleep(0.35)
     elif message_type == 'voice':
         caption = get_forwarded_message_caption_text(message, forwarded_data, message_id_follower_chat)
         for user in users:
-            await bot.send_voice(user.follower_telegram_id, message.voice.file_id, caption=caption)
+            try:
+                await bot.send_voice(user.follower_telegram_id, message.voice.file_id, caption=caption)
+            except BotBlocked:
+                follower = Follower(user.follower_telegram_id)
+                await follower.delete_follower(channel_id)
+                await follower.make_inactive()
+                pass
             await asyncio.sleep(0.35)
     else:
         pass
