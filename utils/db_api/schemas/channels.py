@@ -12,6 +12,7 @@ class Channels(BaseModel):
     title = Column(String(40))
     username = Column(String(32))
     invite_link = Column(String(60))
+    private_hash = Column(String(50), default=None)
 
     client_telegram_id = Column(ForeignKey('clients.telegram_id'))
 

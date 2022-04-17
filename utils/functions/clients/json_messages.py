@@ -1,5 +1,8 @@
 import json
 
+from telethon.tl import functions
+from telethon.tl.types import InputChannel
+
 from utils.db_api.db_queries.channel import Channel
 from utils.db_api.db_queries.client import Client
 from utils.db_api.db_queries.follower import Follower
@@ -13,13 +16,18 @@ async def deserialize_bot_json(client, json_msg) -> (Channels, int, bool, int):
     channel_id = json_dict['channel']['id']
     channel_username = json_dict['channel']['username']
     channel_title = json_dict['channel']['title']
+    channel_private_hash = json_dict['channel']['private_hash']
     channel_invite_link = json_dict['channel']['invite_link']
 
     client_id = json_dict['client']['id']
 
-    channel_entity = await Channel.get_channel_entity(client, channel_username or channel_invite_link)
+    channel_entity = await Channel.get_channel_entity(client,
+                                                      channel_username or channel_invite_link)
 
-    channel = await Client(client_id).start_tracking_channel_or_pass(client, channel_entity, channel_invite_link)
+    channel = await Client(client_id).start_tracking_channel_or_pass(client,
+                                                                     channel_entity,
+                                                                     channel_invite_link,
+                                                                     channel_private_hash)
 
     is_following = await Follower(follower_id).get_follower(channel.telegram_id)
 
@@ -37,6 +45,7 @@ async def serialize_message_to_bot(follower_id: int, channel: Channels, message_
         "title": channel.title,
         "username": channel.username,
         "invite_link": channel.invite_link,
+        "private_hash": channel.private_hash
     }
     client_dict = {
         "id": channel.client_telegram_id,

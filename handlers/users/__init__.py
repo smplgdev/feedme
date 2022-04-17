@@ -1,5 +1,3 @@
-from . import update_clients
-
 from . import developer_contact
 from . import user_channels
 from . import subscribe_to_channel

@@ -5,7 +5,8 @@ import logging
 from telethon import TelegramClient, events
 from telethon.errors import ChannelPrivateError, MessageIdInvalidError
 from telethon.tl import functions
-from telethon.tl.types import PeerChannel, InputMessageID
+from telethon.tl.functions.messages import ImportChatInviteRequest
+from telethon.tl.types import PeerChannel, InputMessageID, InputChannel
 
 from data.config import BOT_ID, POSTGRES_URI, ADMINS
 from handlers.clients.follow_status import success_text

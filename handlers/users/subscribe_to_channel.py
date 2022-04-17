@@ -26,6 +26,10 @@ async def media_subscribe_handler(messages: List[types.Message]):
                     is_forwarded=True, content_types=types.ContentType.ANY)
 @dp.message_handler(ClientFilter(False), regexp=r'(https?:\/\/)?(www[.])?(telegram|t)\.me\/')
 async def subscribe_to_channel(message: types.Message):
+    channel_hash = None
+    channel_id = None
+    channel_title = None
+    channel_username = None
     if message.forward_from_chat:
         # If forwarded message was provided
         channel_id = message.forward_from_chat.id
@@ -34,18 +38,17 @@ async def subscribe_to_channel(message: types.Message):
         channel_title = message.forward_from_chat.full_name
     elif message.text.startswith("@"):
         # If @username was provided
-        channel_id = None
-        channel_title = None
         channel_username = message.text[1:]
         channel_invite_link = channel_username
     else:
         # If link was provided
-        channel_id = None
-        channel_title = None
-        channel_username = None
         channel_invite_link = message.text.split("t.me/")[-1]
+        if "/+" in message.text:
+            # For private channels
+            channel_hash = message.text.split("/+")[-1]
+            channel_invite_link = None
 
-    client_data = await Channel(channel_id).select_client(channel_username, channel_invite_link)
+    client_data = await Channel(channel_id).select_client(channel_username, channel_invite_link, channel_hash)
 
     message_dict = {
         "from_user_id": message.from_user.id,
@@ -56,7 +59,8 @@ async def subscribe_to_channel(message: types.Message):
         "id": channel_id,
         "username": channel_username,
         "title": channel_title,
-        "invite_link": channel_invite_link
+        "invite_link": channel_invite_link,
+        "private_hash": channel_hash,
     }
     client = {
         "id": client_data.telegram_id,
