@@ -49,7 +49,6 @@ async def subscribe_to_channel(message: types.Message):
             channel_invite_link = None
 
     client_data = await Channel(channel_id).select_client(channel_username, channel_invite_link, channel_hash)
-
     message_dict = {
         "from_user_id": message.from_user.id,
         "is_forward": message.is_forward(),

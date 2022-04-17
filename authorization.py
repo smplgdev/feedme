@@ -8,7 +8,7 @@ from telethon.tl import functions
 from telethon.tl.functions.messages import ImportChatInviteRequest
 from telethon.tl.types import PeerChannel, InputMessageID, InputChannel
 
-from data.config import BOT_ID, POSTGRES_URI, ADMINS
+from data.config import BOT_ID, POSTGRES_URI, ADMINS, BOT_USERNAME
 from handlers.clients.follow_status import success_text
 from utils.db_api import quick_commands as qc
 from utils.db_api.db_gino import db
@@ -30,7 +30,7 @@ async def run_client(client):
                                                           channel=channel,
                                                           message_id=message_id,
                                                           status=status)
-            await client.send_message(BOT_ID, message_text)
+            await client.send_message(BOT_USERNAME, message_text)
 
 
         @client.on(events.Album())
@@ -81,14 +81,14 @@ async def run_client(client):
                     ))
                 json_msg = json.dumps(to_json)
                 msg = await client.send_message(
-                    BOT_ID,
+                    BOT_USERNAME,
                     file=event.messages,
                     message=list(map(lambda a: str(a.message), event.messages))
                 )
-                await client.send_message(BOT_ID, json_msg, reply_to=msg[0])
+                await client.send_message(BOT_USERNAME, json_msg, reply_to=msg[0])
                 return
             try:
-                await event.forward_to(BOT_ID)
+                await event.forward_to(BOT_USERNAME)
             except MessageIdInvalidError as e:
                 logging.info(e)
 
@@ -170,7 +170,7 @@ async def run_client(client):
                 #     message=event.message,
                 #     formatting_entities=event.entities
                 # )
-                await event.forward_to(BOT_ID)
+                await event.forward_to(BOT_USERNAME)
             except MessageIdInvalidError as e:
                 logging.info(e)
 

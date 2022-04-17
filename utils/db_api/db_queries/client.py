@@ -8,7 +8,7 @@ from telethon.tl.functions.messages import ImportChatInviteRequest
 from utils.db_api.db_queries.channel import Channel
 from utils.db_api.schemas import clients
 from utils.db_api.schemas.channels import Channels
-from utils.db_api.schemas.clients import Client
+from utils.db_api.schemas.clients import Client as ClientScheme
 
 
 class Client:
@@ -17,7 +17,7 @@ class Client:
 
     @staticmethod
     async def get_clients():
-        return await clients.Client.query.gino.all()
+        return await ClientScheme.query.where(ClientScheme.is_running == True).gino.all()
 
     async def start_tracking_channel_or_pass(self,
                                              client,
@@ -67,4 +67,4 @@ class Client:
         return channel
 
     async def get_all_channels(self):
-        return await Client.query.where(Client.telegram_id == self.telegram_id).gino.all()
+        return await ClientScheme.query.where(ClientScheme.telegram_id == self.telegram_id).gino.all()

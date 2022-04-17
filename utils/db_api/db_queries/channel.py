@@ -49,7 +49,7 @@ class Channel:
                                                     Channels.username == (channel_username or 'None'),
                                                     Channels.invite_link == (channel_invite_link or 'None'),
                                                     Channels.private_hash == (channel_hash or 'None')),
-                                                    User.is_active == True,)).gino.first()
+                                                    Client.is_running == True)).gino.first()
         if is_following:
             return is_following
 
