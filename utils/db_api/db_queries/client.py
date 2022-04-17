@@ -21,6 +21,7 @@ class Client:
 
     async def start_tracking_channel_or_pass(self,
                                              client,
+                                             client_telegram_id: int,
                                              channel_entity,
                                              invite_link: str = None,
                                              private_hash: str = None) -> Channel | None:
@@ -58,7 +59,8 @@ class Client:
             title=channel_title,
             username=channel_username,
             invite_link=invite_link,
-            private_hash=private_hash
+            private_hash=private_hash,
+            client_telegram_id=client_telegram_id
         )
         try:
             await channel.create()

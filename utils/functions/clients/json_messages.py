@@ -25,6 +25,7 @@ async def deserialize_bot_json(client, json_msg) -> (Channels, int, bool, int):
                                                       channel_username or channel_invite_link)
 
     channel = await Client(client_id).start_tracking_channel_or_pass(client,
+                                                                     client_id,
                                                                      channel_entity,
                                                                      channel_invite_link,
                                                                      channel_private_hash)
@@ -54,3 +55,22 @@ async def serialize_message_to_bot(follower_id: int, channel: Channels, message_
     to_json = {"follower": follower_dict, "channel": channel_dict, "client": client_dict}
     json_message = json.dumps(to_json)
     return json_message
+
+
+async def json_message_data(event) -> str:
+    channel = dict(
+        id=event.message.peer_id.channel_id,
+    )
+    message = dict(
+        id=event.message.id,
+        is_forwarded=bool(event.message.fwd_from)
+    )
+    forward_data = dict()
+    to_json = dict(
+        new_message=True,
+        message=message,
+        channel=channel,
+        forward_data=forward_data
+    )
+    json_msg = json.dumps(to_json)
+    return json_msg
