@@ -61,7 +61,7 @@ async def unsubscribe_from_channel(call: types.CallbackQuery, callback_data: dic
     channel_id = int(callback_data.get("channel_id"))
     channel = await Channel(channel_id).get()
     await call.message.edit_text("Вы находитесь в меню настроек канала «<b>%s</b>»" % channel.title,
-                                 reply_markup=get_unfollow_confirmation(channel_id, channel.username))
+                                 reply_markup=get_unfollow_confirmation(channel_id, channel.username, channel.private_hash))
 
 
 @dp.callback_query_handler(delete_channel_callback.filter(decision='unfollow'))
