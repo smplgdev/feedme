@@ -30,7 +30,7 @@ def get_unfollow_confirmation(channel_id: int, channel_link: str = None, private
                 channel_id=channel_id,
                 decision="unfollow"
             )),
-            InlineKeyboardButton(text='Перейти на канал', url=f'https://t.me/{channel_link or "+" + private_hash}'),
+            InlineKeyboardButton(text='Перейти на канал', url=f'https://t.me/{channel_link or ("+" + str(private_hash))}'),
         ],
         [
             InlineKeyboardButton(text='Вернуться назад', callback_data=delete_channel_callback.new(
@@ -61,7 +61,7 @@ async def unsubscribe_from_channel(call: types.CallbackQuery, callback_data: dic
     channel_id = int(callback_data.get("channel_id"))
     channel = await Channel(channel_id).get()
     await call.message.edit_text("Вы находитесь в меню настроек канала «<b>%s</b>»" % channel.title,
-                                 reply_markup=get_unfollow_confirmation(channel_id, channel.invite_link))
+                                 reply_markup=get_unfollow_confirmation(channel_id, channel.username))
 
 
 @dp.callback_query_handler(delete_channel_callback.filter(decision='unfollow'))
