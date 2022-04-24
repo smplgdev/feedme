@@ -2,23 +2,17 @@ import asyncio
 import json
 from typing import List
 
-import media as media
 from aiogram import types
 from aiogram.dispatcher import FSMContext
-from aiogram.types import InputMediaPhoto, MediaGroup, InputMediaDocument, InputMediaVideo, \
+from aiogram.types import InputMediaPhoto, InputMediaDocument, InputMediaVideo, \
     InputMediaAudio, InputMediaAnimation
-from aiogram.utils.exceptions import BotBlocked
 from aiogram_media_group import MediaGroupFilter, media_group_handler
-from telethon.tl.types import InputMediaPoll
 
 from data.config import BOT_USERNAME
 from filters.client_filter import ClientFilter
 from filters.reply_filter import ReplyToMessageFilter
 from loader import dp, bot
-from utils.db_api import quick_commands
 from utils.db_api.db_queries.channel import Channel
-from utils.db_api.db_queries.follower import Follower
-from utils.db_api.db_queries.telegram_user import TelegramUser
 
 
 def get_message_text(initial_message: types.Message, message: dict, channel: dict, forward_data: dict) -> str:
@@ -184,4 +178,3 @@ async def send_message_to_users(message: types.Message, state: FSMContext):
         await bot.send_media_group(user.follower_telegram_id,
                                    medias,
                                    disable_notification=True)
-    return
