@@ -23,14 +23,17 @@ def get_user_channels_markup(channels: list):
     return markup
 
 
-def get_unfollow_confirmation(channel_id: int):
+def get_unfollow_confirmation(channel_id: int, channel_link: str = None, private_hash: str = None):
     markup = InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(text='🗑 Отписаться', callback_data=delete_channel_callback.new(
                 channel_id=channel_id,
                 decision="unfollow"
             )),
-            InlineKeyboardButton(text='Отменить', callback_data=delete_channel_callback.new(
+            InlineKeyboardButton(text='Перейти на канал', url=f'https://t.me/{channel_link or "+" + private_hash}'),
+        ],
+        [
+            InlineKeyboardButton(text='Вернуться назад', callback_data=delete_channel_callback.new(
                 channel_id=channel_id,
                 decision="cancel"
             ))
@@ -57,8 +60,8 @@ async def list_user_channels(message: types.Message, user_telegram_id = None):
 async def unsubscribe_from_channel(call: types.CallbackQuery, callback_data: dict):
     channel_id = int(callback_data.get("channel_id"))
     channel = await Channel(channel_id).get()
-    await call.message.edit_text("Вы уверены, что хотите отписаться от канала «<b>%s</b>»?" % channel.title,
-                                 reply_markup=get_unfollow_confirmation(channel_id))
+    await call.message.edit_text("Вы находитесь в меню настроек канала «<b>%s</b>»" % channel.title,
+                                 reply_markup=get_unfollow_confirmation(channel_id, channel.invite_link))
 
 
 @dp.callback_query_handler(delete_channel_callback.filter(decision='unfollow'))
