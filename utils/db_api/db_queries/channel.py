@@ -15,7 +15,7 @@ class Channel:
         self.telegram_id = telegram_id
 
 
-    async def get(self, **kwargs):
+    async def get(self, **kwargs) -> Channels:
         if len(kwargs) == 0:
             return await Channels.query.where(Channels.telegram_id == self.telegram_id).gino.first()
         return await Channels.query.where(or_(*[kwarg for kwarg in kwargs])).gino.first()
@@ -80,3 +80,9 @@ class Channel:
             else:
                 ids.add(channel.telegram_id)
         return dublicates
+
+    async def update(self, **kwargs):
+        channel = await self.get()
+        await channel.update(
+            **kwargs
+        ).apply()

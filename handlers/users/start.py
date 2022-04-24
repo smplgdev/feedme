@@ -65,6 +65,7 @@ async def bot_start(message: types.Message):
     await message.answer(msg.hello_user(message.from_user.first_name), reply_markup=markup)
     # await message.answer("Глеба самый жёсткий")
 
+
 @dp.callback_query_handler(create_feed_callback.filter())
 async def create_feed_handler(call: types.CallbackQuery):
     await call.message.delete_reply_markup()

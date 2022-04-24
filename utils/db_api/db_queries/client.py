@@ -44,6 +44,7 @@ class Client:
                     return
         else:
             channel_id = int("-100" + str(channel_entity.channel_id))
+            # AttributeError: 'bool' object has no attribute 'channel_id'
             is_exists = await Channels.query.where(channel_id == Channels.telegram_id).gino.first()
             if is_exists:
                 return is_exists

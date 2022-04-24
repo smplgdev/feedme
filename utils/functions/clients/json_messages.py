@@ -59,7 +59,7 @@ async def serialize_message_to_bot(follower_id: int, channel: Channels, message_
 
 async def json_message_data(event) -> str:
     channel = dict(
-        id=event.message.peer_id.channel_id,
+        id=int("-100" + str(event.message.peer_id.channel_id)),
     )
     message = dict(
         id=event.message.id,

@@ -1,4 +1,4 @@
-aiogram<3.0
+aiogram==2.20
 environs~=8.0.0
 gino
 sqlalchemy

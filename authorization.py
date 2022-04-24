@@ -1,17 +1,15 @@
 import asyncio
 import json
-import logging
 
 from telethon import TelegramClient, events
-from telethon.errors import ChannelPrivateError, MessageIdInvalidError
 from telethon.tl import functions
-from telethon.tl.functions.messages import ImportChatInviteRequest
-from telethon.tl.types import PeerChannel, InputMessageID, InputChannel
+from telethon.tl.types import PeerChannel, InputMessageID, PeerUser, PeerChat, \
+    MessageMediaPoll
 
-from data.config import BOT_ID, POSTGRES_URI, ADMINS, BOT_USERNAME
+from data.config import BOT_ID, POSTGRES_URI, BOT_USERNAME
 from handlers.clients.follow_status import success_text
-from utils.db_api import quick_commands as qc
 from utils.db_api.db_gino import db
+from utils.db_api.db_queries.channel import Channel
 from utils.db_api.db_queries.client import Client
 from utils.db_api.db_queries.follower import Follower
 from utils.functions.clients.add_follow import get_following_status
@@ -32,164 +30,124 @@ async def run_client(client):
                                                           status=status)
             await client.send_message(BOT_USERNAME, message_text)
 
-
         @client.on(events.Album())
-        async def forward_album(event):
+        async def send_album(event):
             message = event.messages[0]
-            is_forwarded = message.fwd_from
-            if is_forwarded:
-                fwd_info = None
-                chat_id = 0
-                if isinstance(is_forwarded.from_id, PeerChannel):
-                    try:
-                        fwd_info = await client(functions.channels.GetFullChannelRequest(message.fwd_from.from_id))
-                        chat_id = message.fwd_from.from_id.channel_id
-                    except ChannelPrivateError as e:
-                        logging.info(e)
-                        pass
-                # elif isinstance(is_forwarded.from_id, PeerUser):
-                #     fwd_info = await client(functions.users.GetFullUserRequest(message.fwd_from.from_id))
-                # elif isinstance(is_forwarded.from_id, PeerChat):
-                #     fwd_info = await client(functions.messages.GetFullChatRequest(message.fwd_from.from_id))
 
-                channel_title = fwd_info.chats[0].title
-                channel_username = fwd_info.chats[0].username
-
-                messages_list = list()
-                to_json = dict(
-                    forward_data=dict(
-                        chat_id=chat_id,
-                        chat_title=int("-100" + str(chat_id)),
-                        chat_username=channel_username,
-                        who_forwarded_chat_id=int("-100" + str(message.chat.id)),
-                        who_forwarded_chat_title=message.chat.title,
-                        who_forwarded_chat_username=message.chat.username
-                    ),
-                    messages=messages_list
-                )
-                for msg in event.messages:
-                    message_data=await qc.create_forwarded_message(message_id=msg.fwd_from.channel_post,
-                                                                   chat_id=int("-100" + str(chat_id)),
-                                                                   chat_title=channel_title,
-                                                                   chat_username=channel_username,
-                                                                   who_forwarded_chat_id=int("-100" + str(message.chat.id)),
-                                                                   who_forwarded_chat_title=message.chat.title,
-                                                                   who_forwarded_chat_username=message.chat.username)
-                    messages_list.append(dict(
-                        id=message_data.id,
-                        message_id=msg.id,
-                    ))
-                json_msg = json.dumps(to_json)
-                msg = await client.send_message(
-                    BOT_USERNAME,
-                    file=event.messages,
-                    message=list(map(lambda a: str(a.message), event.messages))
-                )
-                await client.send_message(BOT_USERNAME, json_msg, reply_to=msg[0])
-                return
-            try:
-                await event.forward_to(BOT_USERNAME)
-            except MessageIdInvalidError as e:
-                logging.info(e)
-
-        @client.on(events.NewMessage(forwards=True))
-        async def send_forwarded_message(event):
-            message = event.message
-
-            if event.media:
-                channel_messages = await client(functions.channels.GetMessagesRequest(
-                    channel=event.message.chat,
-                    id=[InputMessageID(event.message.id - 1), InputMessageID(event.message.id + 1)]
-                ))
-
-                previous_message = channel_messages.messages[0]
-                next_message = channel_messages.messages[1]
-                if (previous_message.date == event.message.date or next_message.date == event.message.date) \
-                        and (previous_message.media or next_message.media):
-                    return
-            try:
-                channel_id = message.fwd_from.from_id.channel_id
-            except AttributeError:
-                return
-            try:
-                channel_info = await client(functions.channels.GetFullChannelRequest(channel_id))
-            except ValueError:
-                return
-            except ChannelPrivateError:
-                return
-            channel_title = channel_info.chats[0].title
-            channel_username = channel_info.chats[0].username
-            messages_list = list()
-            to_json = dict(
-                forward_data=dict(
-                    chat_id=channel_id,
-                    chat_title=int("-100" + str(channel_id)),
-                    chat_username=channel_username,
-                    who_forwarded_chat_id=int("-100" + str(message.chat.id)),
-                    who_forwarded_chat_title=message.chat.title,
-                    who_forwarded_chat_username=message.chat.username
-                ),
-                messages=messages_list
-            )
-            fwd_msg_data = await qc.create_forwarded_message(message_id=message.fwd_from.channel_post,
-                                                             chat_id=int("-100" + str(channel_id)),
-                                                             chat_title=channel_title,
-                                                             chat_username=channel_username,
-                                                             who_forwarded_chat_id=int("-100" + str(message.chat.id)),
-                                                             who_forwarded_chat_title=message.chat.title,
-                                                             who_forwarded_chat_username=message.chat.username)
-            messages_list.append(dict(
-                id=fwd_msg_data.id,
-                message_id=message.id,
+            msg = await client.send_message(
+                BOT_USERNAME,
+                file=event.messages,
+                message=list(map(lambda a: str(a.message), event.messages),
             ))
 
-            json_msg = json.dumps(to_json)
-            msg = await event.forward_to(BOT_ID)
-            await client.send_message(BOT_ID, json_msg, reply_to=msg)
+            await forward_usual_message(event, message, msg[0])
 
-        @client.on(events.NewMessage(forwards=False))
-        async def forward_usual_message(event):
-            if not(isinstance(event.message.peer_id, PeerChannel)):
+
+        @client.on(events.NewMessage(incoming=True))
+        async def forward_usual_message(event, message=None, msg=None):
+            if msg is None:
+                message = event.message
+
+            if not(isinstance(message.peer_id, PeerChannel)):
                 return
-            if event.media:
+
+            is_album = bool(msg)
+            with_media = bool(message.media)
+
+            if message.media and not msg:
+                if isinstance(message.media, MessageMediaPoll):
+                    msg = await event.forward_to(BOT_USERNAME)
+
                 channel_messages = await client(functions.channels.GetMessagesRequest(
-                    channel=event.message.chat,
-                    id=[InputMessageID(event.message.id - 1), InputMessageID(event.message.id + 1)]
+                    channel=message.chat,
+                    id=[InputMessageID(message.id - 1), InputMessageID(message.id + 1)]
                 ))
 
                 previous_message = channel_messages.messages[0]
                 next_message = channel_messages.messages[1]
-                if (previous_message.date == event.message.date or next_message.date == event.message.date) \
-                        and (previous_message.media or next_message.media):
+                if not msg and (((previous_message.date == message.date) and previous_message.media) or
+                               ((next_message.date == message.date) and next_message.media)):
                     return
-            try:
-                # TODO: ValueError: Could not find the input entity for PeerUser(user_id=5292056351) (PeerUser)
-                # ОБРАБОТАТЬ!!!!
-                # msg = await client.send_message(
-                #     BOT_ID,
-                #     message=event.message,
-                #     formatting_entities=event.entities
-                # )
-                await event.forward_to(BOT_USERNAME)
-            except MessageIdInvalidError as e:
-                logging.info(e)
+            channel_id = int("-100" + str(message.peer_id.channel_id))
+            channel_entity = await client.get_entity(channel_id)
+            channel = await Channel(channel_id).get()
+            if not channel:
+                return
+            if channel_entity.title != channel.title:
+                await Channel(channel_id).update(title=channel_entity.title)
+            if channel_entity.username != channel.username:
+                await Channel(channel_id).update(username=channel_entity.username)
 
-        # @client.on(events.NewMessage(forwards=True))
-        # async def send_forwarded_message(event):
-        #     if not(isinstance(event.message.peer_id, PeerChannel)):
-        #         return
-        #     message = event.message
-        #     await qc.create_forwarded_message(message_id=message.id,
-        #                                       who_forwarded_chat_id=message.chat.id,
-        #                                       who_forwarded_chat_name=message.chat.title,
-        #                                       who_forwarded_chat_username=message.chat.username)
-        #     await client.send_message(
-        #         BOT_ID,
-        #         file=event.media,  # event.messages is a List - meaning we're sending an album
-        #         message=event.message,  # get the caption message from the album
-        #     )
+            if not msg:
+                msg = await client.send_message(
+                    BOT_USERNAME,
+                    message,
+                )
 
+            forward_data = dict()
+            is_fwd = False
+            if message.fwd_from:
+                is_fwd = True
+                fwd_from = message.fwd_from
+                from_id = fwd_from.from_id
+                peer_type = None
+                peer_id = None
+                peer_name = None
+                peer_username = None
+                if isinstance(from_id, PeerChannel):
+                    peer_type = 'PeerChannel'
+                    peer_id = from_id.channel_id
+                    entity = await client.get_entity(peer_id)
+                    peer_name = entity.title
+                    peer_username = entity.username
+                elif isinstance(from_id, PeerUser):
+                    peer_type = 'PeerUser'
+                    peer_id = from_id.user_id
+                    entity = await client.get_entity(peer_id)
+                    peer_name = entity.first_name
+                    peer_username = entity.username
+                elif isinstance(from_id, PeerChat):
+                    peer_type = 'PeerChat'
+                    peer_id = from_id.chat_id
+                    entity = await client.get_entity(peer_id)
+                    peer_name = entity.title
+                    peer_username = entity.username
+
+
+                forward_data.update(
+                    message=dict(
+                        id=fwd_from.channel_post,
+                    ),
+                    peer=dict(
+                        peer_type=peer_type,
+                        id=peer_id,
+                        name=peer_name,
+                        username=peer_username,
+
+                    )
+                )
+
+            to_json = dict(
+                message=dict(
+                    id=message.id,
+                    is_forwarded=is_fwd
+                ),
+                channel=dict(
+                    id=channel_id,
+                    title=channel_entity.title,
+                    username=channel_entity.username,
+                    private_hash=channel.private_hash,
+                    is_private=bool(channel.private_hash)
+                ),
+                forward_data=forward_data,
+                with_media=with_media,
+                is_album=is_album,
+            )
+            json_msg = json.dumps(to_json)
+
+            await client.send_message(BOT_USERNAME, json_msg, reply_to=msg)
         print("Client is running!")
+        client.parse_mode = None
         await client.run_until_disconnected()
 
 async def clients_main():
