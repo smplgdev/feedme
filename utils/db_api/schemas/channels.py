@@ -9,7 +9,7 @@ class Channels(BaseModel):
     id = Column(BigInteger, primary_key=True)
     telegram_id = Column(BigInteger, unique=True)
 
-    title = Column(String(40))
+    title = Column(String(255))
     username = Column(String(32))
     invite_link = Column(String(60))
     private_hash = Column(String(50), default=None)

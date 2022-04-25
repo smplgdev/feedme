@@ -4,8 +4,8 @@ from typing import List
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
-from aiogram.types import InputMediaPhoto, InputMediaDocument, InputMediaVideo, \
-    InputMediaAudio, InputMediaAnimation
+from aiogram.types import InputMediaPhoto, InputMediaDocument, InputMediaVideo, InputMediaAudio, \
+    InputMediaAnimation
 from aiogram_media_group import MediaGroupFilter, media_group_handler
 
 from data.config import BOT_USERNAME
@@ -15,7 +15,7 @@ from loader import dp, bot
 from utils.db_api.db_queries.channel import Channel
 
 
-def get_message_text(initial_message: types.Message, message: dict, channel: dict, forward_data: dict) -> str:
+def get_message_text(initial_message: types.Message, message: dict, channel: dict, forward_data: dict):
     string = str()
     channel_title = channel['title']
     channel_id = channel['id']
@@ -35,12 +35,13 @@ def get_message_text(initial_message: types.Message, message: dict, channel: dic
         peer_type = forward_data['peer']['peer_type']
         name = forward_data['peer']['name']
         username = forward_data['peer']['username'] or BOT_USERNAME
+        fwd_url = f"https://t.me/{username}"
         if peer_type == 'PeerUser':
-            forward_from_string = f'<a href="https://t.me/{username}">Пересланное сообщение от пользователя {name}</a>'
+            forward_from_string = f'<a href="{fwd_url}">Пересланное сообщение от пользователя {name}</a>'
         elif peer_type == 'PeerChannel':
-            forward_from_string = f'<a href="https://t.me/{username}">Пересланное сообщение из канала «{name}»</a>'
+            forward_from_string = f'<a href="{fwd_url}">Пересланное сообщение из канала «{name}»</a>'
         elif peer_type == 'PeerChat':
-            forward_from_string = f'<a href="https://t.me/{username}">Переслано из чата «{name}»</a>'
+            forward_from_string = f'<a href="{fwd_url}">Переслано из чата «{name}»</a>'
 
     if forward_from_string:
         string += forward_from_string + '\n\n'
@@ -48,10 +49,10 @@ def get_message_text(initial_message: types.Message, message: dict, channel: dic
         string += '\n'
 
     if initial_message.caption:
-        msg_caption = initial_message.caption[:1023-len(string)]
+        msg_caption = initial_message.parse_entities()[:1023-len(string)]
         string += msg_caption
     elif initial_message.text:
-        msg_text = initial_message.text[:4095-len(string)]
+        msg_text = initial_message.parse_entities()[:4095-len(string)]
         string += msg_text
 
     return string
@@ -89,9 +90,9 @@ async def send_message_to_users(message: types.Message, state: FSMContext):
     is_album = msg['is_album']
 
     text = get_message_text(initial_message=initial_message,
-                            message=message,
-                            channel=channel,
-                            forward_data=forward_data)
+                                        message=message,
+                                        channel=channel,
+                                        forward_data=forward_data)
 
     channel_id = channel['id']
     users = await Channel(channel_id).get_followed_users()
