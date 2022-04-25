@@ -75,8 +75,6 @@ async def get_media_group_file_ids(messages: List[types.Message], state: FSMCont
 
     # print(data.get(f"{messages[0].media_group_id}"))
 
-
-
 @dp.message_handler(ClientFilter(), ReplyToMessageFilter(), content_types=types.ContentType.TEXT)
 async def send_message_to_users(message: types.Message, state: FSMContext):
     json_msg = message.text
@@ -173,8 +171,10 @@ async def send_message_to_users(message: types.Message, state: FSMContext):
         elif initial_message.animation:
             medias.append(InputMediaAnimation(initial_message.animation.file_id,
                                               caption=text))
-
-    for user in users:
-        await bot.send_media_group(user.follower_telegram_id,
-                                   medias,
-                                   disable_notification=True)
+    if len(medias) > 0:
+        for user in users:
+            await bot.send_media_group(user.follower_telegram_id,
+                                       medias,
+                                       disable_notification=True)
+            await asyncio.sleep(1/20)
+        return

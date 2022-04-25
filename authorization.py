@@ -4,7 +4,7 @@ import json
 from telethon import TelegramClient, events
 from telethon.tl import functions
 from telethon.tl.types import PeerChannel, InputMessageID, PeerUser, PeerChat, \
-    MessageMediaPoll
+    MessageMediaPoll, MessageMediaWebPage
 
 from data.config import BOT_ID, POSTGRES_URI, BOT_USERNAME
 from handlers.clients.follow_status import success_text
@@ -52,7 +52,11 @@ async def run_client(client):
                 return
 
             is_album = bool(msg)
-            with_media = bool(message.media)
+
+            if isinstance(message.media, MessageMediaWebPage):
+                with_media = False
+            else:
+                with_media = bool(message.media)
 
             if message.media and not msg:
                 if isinstance(message.media, MessageMediaPoll):
