@@ -6,7 +6,7 @@ from telethon.tl import functions
 from telethon.tl.types import PeerChannel, InputMessageID, PeerUser, PeerChat, \
     MessageMediaPoll, MessageMediaWebPage
 
-from client.subscribe_to_channels import subscribe_to_all_channels
+# from client.subscribe_to_channels import subscribe_to_all_channels
 from data.config import BOT_ID, POSTGRES_URI, BOT_USERNAME
 from handlers.clients.follow_status import success_text
 from utils.db_api.db_gino import db
@@ -167,11 +167,11 @@ async def clients_main():
         TelegramClient("session_" + str(client.telegram_id), client.api_id, client.api_hash) for client in clients_data
     ]
 
-    await subscribe_to_all_channels(clients[0], clients_data[0].telegram_id)
+    # await subscribe_to_all_channels(clients[0], clients_data[0].telegram_id)
 
-    # await asyncio.gather(
-    #     *[run_client(client) for client in clients],
-    # )
+    await asyncio.gather(
+        *[run_client(client) for client in clients],
+    )
 
 
 if __name__ == '__main__':
