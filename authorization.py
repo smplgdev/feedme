@@ -6,6 +6,7 @@ from telethon.tl import functions
 from telethon.tl.types import PeerChannel, InputMessageID, PeerUser, PeerChat, \
     MessageMediaPoll, MessageMediaWebPage
 
+from client.subscribe_to_channels import subscribe_to_all_channels
 from data.config import BOT_ID, POSTGRES_URI, BOT_USERNAME
 from handlers.clients.follow_status import success_text
 from utils.db_api.db_gino import db
@@ -73,14 +74,14 @@ async def run_client(client):
                                ((next_message.date == message.date) and next_message.media)):
                     return
             channel_id = int("-100" + str(message.peer_id.channel_id))
-            channel_entity = await client.get_entity(channel_id)
+            # channel_entity = await client.get_entity(channel_id)
             channel = await Channel(channel_id).get()
             if not channel:
                 return
-            if channel_entity.title != channel.title:
-                await Channel(channel_id).update(title=channel_entity.title)
-            if channel_entity.username != channel.username:
-                await Channel(channel_id).update(username=channel_entity.username)
+            # if channel_entity.title != channel.title:
+            #     await Channel(channel_id).update(title=channel_entity.title)
+            # if channel_entity.username != channel.username:
+            #     await Channel(channel_id).update(username=channel_entity.username)
 
             if not msg:
                 msg = await client.send_message(
@@ -138,8 +139,8 @@ async def run_client(client):
                 ),
                 channel=dict(
                     id=channel_id,
-                    title=channel_entity.title,
-                    username=channel_entity.username,
+                    title=channel.title,
+                    username=channel.username,
                     private_hash=channel.private_hash,
                     is_private=bool(channel.private_hash)
                 ),
@@ -166,9 +167,11 @@ async def clients_main():
         TelegramClient("session_" + str(client.telegram_id), client.api_id, client.api_hash) for client in clients_data
     ]
 
-    await asyncio.gather(
-        *[run_client(client) for client in clients],
-    )
+    await subscribe_to_all_channels(clients[0], clients_data[0].telegram_id)
+
+    # await asyncio.gather(
+    #     *[run_client(client) for client in clients],
+    # )
 
 
 if __name__ == '__main__':
