@@ -106,7 +106,7 @@ async def send_message_to_users(message: types.Message, state: FSMContext):
             try:
                 await bot.send_message(user.telegram_id, text, disable_web_page_preview=True)
             except BotBlocked:
-                follower = Follower(user.follower_telegram_id)
+                follower = Follower(user.telegram_id)
                 await follower.delete_follower(channel_id)
                 await follower.make_inactive()
                 pass
