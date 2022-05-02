@@ -6,6 +6,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import InputMediaPhoto, InputMediaDocument, InputMediaVideo, InputMediaAudio, \
     InputMediaAnimation
+from aiogram.utils.exceptions import BotBlocked
 from aiogram_media_group import MediaGroupFilter, media_group_handler
 
 from data.config import BOT_USERNAME
@@ -13,6 +14,8 @@ from filters.client_filter import ClientFilter
 from filters.reply_filter import ReplyToMessageFilter
 from loader import dp, bot
 from utils.db_api.db_queries.channel import Channel
+from utils.db_api.db_queries.follower import Follower
+from utils.db_api.db_queries.telegram_user import TelegramUser
 
 
 def get_message_text(initial_message: types.Message, message: dict, channel: dict, forward_data: dict):
@@ -95,6 +98,21 @@ async def send_message_to_users(message: types.Message, state: FSMContext):
                                         forward_data=forward_data)
 
     channel_id = channel['id']
+
+    if channel_id == -1001763044206:
+        # FEEDTG
+        users = await TelegramUser.get_all_users()
+        for user in users:
+            try:
+                await bot.send_message(user.telegram_id, text, disable_web_page_preview=True)
+            except BotBlocked:
+                follower = Follower(user.follower_telegram_id)
+                await follower.delete_follower(channel_id)
+                await follower.make_inactive()
+                pass
+            await asyncio.sleep(0.35)
+        return
+
     users = await Channel(channel_id).get_followed_users()
 
     if not with_media:
